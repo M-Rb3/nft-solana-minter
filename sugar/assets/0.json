@@ -1,0 +1,26 @@
+{
+  "name": "collection testnet #0",
+  "symbol": "TST",
+  "description": "This is an example description for Solana Test 1",
+  "seller_fee_basis_points": 500,
+  "image": "0.png",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Blue"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Green"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "0.png",
+        "type": "image/png"
+      }
+    ],
+    "category": "image"
+  }
+}
