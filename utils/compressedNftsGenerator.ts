@@ -72,7 +72,6 @@ import { createNft } from "@metaplex-foundation/mpl-token-metadata";
 //   });
 //   console.log(response);
 // };
-console.log("yrdy", process.env.NEXT_PUBLIC_RPC_URL!);
 
 const umi = createUmi(process.env.NEXT_PUBLIC_RPC_URL!).use(mplBubblegum());
 
@@ -84,8 +83,27 @@ const mySigner = createSignerFromKeypair(umi, myKeypair);
 umi.use(signerIdentity(mySigner));
 const merkleTree = generateSigner(umi);
 
+const merkleTreeDevnetAddress = publicKey(
+  "jUAZJ4iTrzMYL62a2Yiyp4X1cV45GkMfuTmNcxJBH8i"
+);
+
+const myPhantomTestnetWallet = publicKey(
+  "ExiCVzJwwhe3jKPRTH7Yn9rs259TYXCcbmeVJUWFgqDR"
+);
+const myPhantomDevnetWallet = publicKey(
+  "ExiCVzJwwhe3jKPRTH7Yn9rs259TYXCcbmeVJUWFgqDR"
+);
+
+const collectionDevnetMint = publicKey(process.env.NEXT_PUBLIC_COLLECTION_ID!);
+
+export const fetchMerckleTree = async (merkleTreePubKey: string) => {
+  const merkleTreeAddress = publicKey(merkleTreePubKey);
+
+  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTreeAddress);
+  return console.log("merkleTreeAccount", merkleTreeAccount);
+};
+
 export const createMerckleTree = async () => {
-  // Create Tree
   const merkleTree = generateSigner(umi);
   const builder = await createTree(umi, {
     merkleTree,
@@ -93,65 +111,96 @@ export const createMerckleTree = async () => {
     maxBufferSize: 64,
     public: false,
   });
-  console.log("test 1");
-
   await builder.sendAndConfirm(umi);
-  const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree.publicKey);
-  // console.log("merkleTreeAccount", merkleTreeAccount);
-
-  // fetch Tree
-
-  // console.log("test 2");
-  // const merkleTreeAddress = publicKey(
-  //   "CJFo7saPmRpQkcwLbv919PPe2XLz5oDyJ64yMaoMxN4j"
-  // );
-  // const myPhantomWallet = publicKey(
-  //   "ExiCVzJwwhe3jKPRTH7Yn9rs259TYXCcbmeVJUWFgqDR"
-  // );
-  // const collectionMint = publicKey(process.env.NEXT_PUBLIC_COLLECTION_ID!);
-  // const merkleTree = await fetchMerkleTree(umi, merkleTreeAddress);
-  // const treeConfig = await fetchTreeConfigFromSeeds(umi, {
-  //   merkleTree: merkleTreeAddress,
-  // });
-
-  // // Create a cNFTS to a pre-defined collection
-
-  // const { signature } = await mintToCollectionV1(umi, {
-  //   leafOwner: myPhantomWallet, // cNFT owner
-  //   merkleTree: merkleTree.publicKey,
-  //   collectionMint,
-
-  //   metadata: {
-  //     name: "My Compressed NFT",
-  //     uri: "https://arweave.net/V48JTzBnpJGYLKAKjJ6LkkDfhE9Y-RyWKolnZk3TJrE",
-  //     sellerFeeBasisPoints: 500, // 5%
-  //     collection: { key: collectionMint, verified: false },
-  //     creators: [
-  //       { address: umi.identity.publicKey, verified: false, share: 100 },
-  //     ],
-  //   },
-  // }).sendAndConfirm(umi);
-  // console.log("sucess mint");
-
-  // const leaf: LeafSchema = await parseLeafFromMintToCollectionV1Transaction(
-  //   umi,
-  //   signature
-  // );
-  // const assetId = findLeafAssetIdPda(umi, {
-  //   merkleTree: merkleTree.publicKey,
-  //   leafIndex: leaf.nonce,
-  // });
-  // console.log("assetId", assetId);
+  return merkleTree;
 };
+
+export const createcNFTs = async () => {
+  // const merkleTree = await fetchMerkleTree(umi, merkleTreeDevnetAddress);
+  // const treeConfig = await fetchTreeConfigFromSeeds(umi, {
+  //   merkleTree: merkleTreeDevnetAddress,
+  // });
+
+  // Create a cNFTS to a pre-defined collection
+
+  const { signature } = await mintToCollectionV1(umi, {
+    leafOwner: myPhantomDevnetWallet, // cNFT owner
+    merkleTree: merkleTreeDevnetAddress,
+    collectionMint: collectionDevnetMint,
+
+    metadata: {
+      name: "My Compressed NFT",
+      uri: "https://arweave.net/V48JTzBnpJGYLKAKjJ6LkkDfhE9Y-RyWKolnZk3TJrE",
+      sellerFeeBasisPoints: 500, // 5%
+      collection: { key: collectionDevnetMint, verified: false },
+      creators: [
+        { address: umi.identity.publicKey, verified: false, share: 100 },
+      ],
+    },
+  }).sendAndConfirm(umi);
+  console.log("sucess mint");
+
+  const leaf: LeafSchema = await parseLeafFromMintToCollectionV1Transaction(
+    umi,
+    signature
+  );
+  const assetId = findLeafAssetIdPda(umi, {
+    merkleTree: merkleTree.publicKey,
+    leafIndex: leaf.nonce,
+  });
+  console.log("assetId", assetId);
+};
+
+// console.log("test 2");
+// const merkleTreeAddress = publicKey(
+//   "CJFo7saPmRpQkcwLbv919PPe2XLz5oDyJ64yMaoMxN4j"
+// );
+// const myPhantomWallet = publicKey(
+//   "ExiCVzJwwhe3jKPRTH7Yn9rs259TYXCcbmeVJUWFgqDR"
+// );
+// const collectionMint = publicKey(process.env.NEXT_PUBLIC_COLLECTION_ID!);
+// const merkleTree = await fetchMerkleTree(umi, merkleTreeAddress);
+// const treeConfig = await fetchTreeConfigFromSeeds(umi, {
+//   merkleTree: merkleTreeAddress,
+// });
+
+// // Create a cNFTS to a pre-defined collection
+
+// const { signature } = await mintToCollectionV1(umi, {
+//   leafOwner: myPhantomWallet, // cNFT owner
+//   merkleTree: merkleTree.publicKey,
+//   collectionMint,
+
+//   metadata: {
+//     name: "My Compressed NFT",
+//     uri: "https://arweave.net/V48JTzBnpJGYLKAKjJ6LkkDfhE9Y-RyWKolnZk3TJrE",
+//     sellerFeeBasisPoints: 500, // 5%
+//     collection: { key: collectionMint, verified: false },
+//     creators: [
+//       { address: umi.identity.publicKey, verified: false, share: 100 },
+//     ],
+//   },
+// }).sendAndConfirm(umi);
+// console.log("sucess mint");
+
+// const leaf: LeafSchema = await parseLeafFromMintToCollectionV1Transaction(
+//   umi,
+//   signature
+// );
+// const assetId = findLeafAssetIdPda(umi, {
+//   merkleTree: merkleTree.publicKey,
+//   leafIndex: leaf.nonce,
+// });
+// console.log("assetId", assetId);
 
 export const createNewCollecton = async () => {
   const collectionMintTestnet = generateSigner(umi);
-  const test = await createNft(umi, {
+  const collection = await createNft(umi, {
     mint: collectionMintTestnet,
     name: "My Collection",
     uri: "https://example.com/my-collection.json",
     sellerFeeBasisPoints: percentAmount(5.5), // 5.5%
     isCollection: true,
   }).sendAndConfirm(umi);
-  console.log("test", test);
+  console.log("collection", collection);
 };

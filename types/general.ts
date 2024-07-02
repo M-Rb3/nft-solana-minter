@@ -2,14 +2,14 @@
   General types for general uses
 */
 
-import type { NextSeoProps } from "next-seo";
+import { Metadata } from "next";
 
 /**
  * Default props for all layouts
  */
 export type SimpleLayoutProps = {
   children: React.ReactNode;
-  seo?: NextSeoProps;
+  seo?: Metadata;
   className?: string;
 
   /**
