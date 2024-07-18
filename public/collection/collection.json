@@ -1,0 +1,25 @@
+{
+  "name": "RAK DAO conference",
+  "symbol": "RKDO",
+  "description": "An NFT ticket for the RAK DAO conference, granting access to panels, speeches, and networking sessions.",
+  "seller_fee_basis_points": 500,
+  "image": "https://arweave.net/Ot3CpqnOotspFPiRX1cDk7TSd1e8rfmQPrfBjkLks_I",
+  "attributes": [
+    { "trait_type": "Event Name", "value": "Building the future" },
+
+    { "trait_type": "Event Date", "value": "October 25, 2024" },
+    {
+      "trait_type": "Event Location",
+      "value": "Al Hamra International Exhibition & Conference Center, RAK"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://arweave.net/Ot3CpqnOotspFPiRX1cDk7TSd1e8rfmQPrfBjkLks_I",
+        "type": "image/png"
+      }
+    ],
+    "category": "image"
+  }
+}

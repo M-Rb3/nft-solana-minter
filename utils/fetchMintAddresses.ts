@@ -22,7 +22,7 @@ const keypair = umi.eddsa.createKeypairFromSecretKey(
       .map((val) => Number(val))
   )
 );
-console.log("keypair", keypair.secretKey);
+// console.log("keypair", keypair.secretKey);
 
 // Register it to the Umi client.
 umi.use(keypairIdentity(keypair));

@@ -1,9 +1,11 @@
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
+  createGenericFileFromBrowserFile,
   createSignerFromKeypair,
   generateSigner,
   percentAmount,
   signerIdentity,
+  some,
 } from "@metaplex-foundation/umi";
 import {
   LeafSchema,
@@ -16,17 +18,38 @@ import {
   parseLeafFromMintToCollectionV1Transaction,
 } from "@metaplex-foundation/mpl-bubblegum";
 import { publicKey } from "@metaplex-foundation/umi";
-import { createNft } from "@metaplex-foundation/mpl-token-metadata";
+import {
+  TokenStandard,
+  createNft,
+} from "@metaplex-foundation/mpl-token-metadata";
 import { dasApi } from "@metaplex-foundation/digital-asset-standard-api";
-import { fetchAssetsByCollection } from "@metaplex-foundation/mpl-core";
 import { fetchMintAddresses } from "@/utils/fetchMintAddresses";
 import { Connection, TransactionResponse } from "@solana/web3.js";
-import { base58 } from "@metaplex-foundation/umi/serializers";
+import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
+import { getNftMetaData } from "../constants/metadata";
+import {
+  createCollection,
+  createCollectionV1,
+} from "@metaplex-foundation/mpl-core";
+import bs58 from "bs58";
+import {
+  mplCandyMachine,
+  create,
+  fetchCandyMachine,
+} from "@metaplex-foundation/mpl-candy-machine";
+
+interface UploadFileProps {
+  img: File;
+  name: string;
+}
+
 const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!);
 
 const umi = createUmi(process.env.NEXT_PUBLIC_RPC_URL!)
+  .use(mplCandyMachine())
   .use(mplBubblegum())
-  .use(dasApi());
+  .use(dasApi())
+  .use(irysUploader());
 
 const senderSecretKey = Uint8Array.from(
   process.env.NEXT_PUBLIC_SENDER_SECRET_KEY!.split(",").map(Number)
@@ -34,7 +57,6 @@ const senderSecretKey = Uint8Array.from(
 const myKeypair = umi.eddsa.createKeypairFromSecretKey(senderSecretKey);
 const mySigner = createSignerFromKeypair(umi, myKeypair);
 umi.use(signerIdentity(mySigner));
-const merkleTree = generateSigner(umi);
 
 const merkleTreeDevnetAddress = publicKey(
   "jUAZJ4iTrzMYL62a2Yiyp4X1cV45GkMfuTmNcxJBH8i"
@@ -46,6 +68,9 @@ const myPhantomTestnetWallet = publicKey(
 const myPhantomDevnetWallet = publicKey(
   "ExiCVzJwwhe3jKPRTH7Yn9rs259TYXCcbmeVJUWFgqDR"
 );
+const collectionTEst = publicKey(
+  "8pxHdXq8sjBjQQJwfNts8S25GUvqyHqoMbhGfvT1nDbh"
+);
 
 const collectionDevnetMint = publicKey(process.env.NEXT_PUBLIC_COLLECTION_ID!);
 
@@ -53,6 +78,9 @@ export const fetchMerckleTree = async (merkleTreePubKey: string) => {
   const merkleTreeAddress = publicKey(merkleTreePubKey);
 
   const merkleTreeAccount = await fetchMerkleTree(umi, merkleTreeAddress);
+  const treeConfig = await fetchTreeConfigFromSeeds(umi, {
+    merkleTree: merkleTreeDevnetAddress,
+  });
   return console.log("merkleTreeAccount", merkleTreeAccount);
 };
 
@@ -69,14 +97,15 @@ export const createMerckleTree = async () => {
 };
 
 export const createcNFTs = async (recipientAddress: string) => {
-  // const merkleTree = await fetchMerkleTree(umi, merkleTreeDevnetAddress);
-  // const treeConfig = await fetchTreeConfigFromSeeds(umi, {
-  //   merkleTree: merkleTreeDevnetAddress,
-  // });
-
   // Create a cNFTS to a pre-defined collection
 
   const recipientPubKey = publicKey(recipientAddress);
+
+  const uri = await generateMetaData({
+    name: "buidling",
+    imgURI:
+      "https://arweave.net/Wtz8OiGiuddAYIYOJlpYjt0ZCVVFW0lIHjn3h6rT3AQ?ext=png",
+  });
 
   const { signature } = await mintToCollectionV1(umi, {
     leafOwner: recipientPubKey, // cNFT owner
@@ -84,8 +113,8 @@ export const createcNFTs = async (recipientAddress: string) => {
     collectionMint: collectionDevnetMint,
 
     metadata: {
-      name: "Building the future #003",
-      uri: "https://arweave.net/1KzjTp2gn-9_fQBjSnd_chFPze5wYI6eipnD2DoI440",
+      name: "Building the future",
+      uri: uri,
       sellerFeeBasisPoints: 500, // 5%
       collection: { key: collectionDevnetMint, verified: true },
       creators: [
@@ -95,46 +124,129 @@ export const createcNFTs = async (recipientAddress: string) => {
   }).sendAndConfirm(umi);
   console.log("sucess mint", signature);
 
-  // Parse the leaf from the transaction
-  // const leaf: LeafSchema = await parseLeafFromMintToCollectionV1Transaction(
-  //   umi,
-  //   signature
-  // );
+  const signatureBase58 = bs58.encode(signature);
 
-  // // Get the asset ID associated with the leaf
-  // const assetId = findLeafAssetIdPda(umi, {
-  //   merkleTree: merkleTreeDevnetAddress,
-  //   leafIndex: leaf.nonce,
-  // });
-
-  // console.log("Leaf:", leaf);
-  // console.log("Asset ID:", assetId.toString());
-
-  // return assetId;
+  console.log("signatureBase58", signatureBase58);
+  return signatureBase58;
 };
 
-export const fetchCollection = async () => {
-  const authority = publicKey(process.env.NEXT_PUBLIC_COLLECTION_ID!);
+export const fetchCollection = async (
+  collectionAddress: string = "HYXSHULhGEbkpPZUBHygcZD8Efg6JsgUV7ch64QdrkcQ"
+) => {
+  const assetsByCollection = await fetchMintAddresses(collectionAddress);
 
-  const assetsByCollection = await fetchMintAddresses(
-    "HYXSHULhGEbkpPZUBHygcZD8Efg6JsgUV7ch64QdrkcQ"
-  );
-  // await fetchAssetsByCollection(
-  //   umi,
-  //   collectionDevnetMint
-  // );
-  console.log("colelction", assetsByCollection);
   return assetsByCollection;
 };
 
-export const createNewCollecton = async () => {
-  const collectionMintTestnet = generateSigner(umi);
-  const collection = await createNft(umi, {
-    mint: collectionMintTestnet,
-    name: "My Collection",
-    uri: "https://example.com/my-collection.json",
-    sellerFeeBasisPoints: percentAmount(5.5), // 5.5%
+export const createNewCollecton = async ({
+  collectionName,
+  collectionImg,
+}: {
+  collectionName: string;
+  collectionImg: File;
+}) => {
+  const collectionMint = generateSigner(umi);
+  const candyMachine = generateSigner(umi);
+
+  // upload collection image asset
+  const imgURI = await uploadFile({
+    img: collectionImg,
+    name: collectionName,
+  });
+  // upload colection metadata
+  const uri = await generateMetaData({
+    imgURI,
+    name: "RAK DAO building the future",
+  });
+
+  // Create the Collection NFT.
+  await createNft(umi, {
+    mint: collectionMint,
+    authority: umi.identity,
+    name: collectionName,
+    uri: uri,
+    sellerFeeBasisPoints: percentAmount(0),
     isCollection: true,
   }).sendAndConfirm(umi);
-  console.log("collection", collection);
+
+  // Create the Candy Machine.
+  const createIx = await create(umi, {
+    candyMachine,
+    collectionMint: collectionMint.publicKey,
+    collectionUpdateAuthority: umi.identity,
+    tokenStandard: TokenStandard.NonFungible,
+    sellerFeeBasisPoints: percentAmount(0),
+    itemsAvailable: 5000,
+    creators: [
+      {
+        address: umi.identity.publicKey,
+        verified: true,
+        percentageShare: 100,
+      },
+    ],
+    configLineSettings: some({
+      prefixName: `${collectionName} #$ID+1$`,
+      nameLength: 0,
+      prefixUri: "https://arweave.net/",
+      uriLength: 43,
+      isSequential: false,
+    }),
+  });
+  const { signature } = await createIx.sendAndConfirm(umi);
+  const signatureBase58 = bs58.encode(signature);
+
+  console.log("signatureBase58", signatureBase58);
+  getTransactionDetails(signature);
+  return signatureBase58;
+};
+
+export const uploadFile = async ({ img, name }: UploadFileProps) => {
+  // Parse a generic file to and from a browser file.
+  const imgFile = await createGenericFileFromBrowserFile(img, {
+    displayName: name,
+    contentType: "image/png",
+  });
+
+  const [myUri] = await umi.uploader.upload([imgFile]);
+
+  return myUri;
+};
+
+export const generateMetaData = async ({
+  imgURI,
+  name,
+}: {
+  imgURI: string;
+  name: string;
+}) => {
+  const myUri = await umi.uploader.uploadJson(getNftMetaData({ imgURI, name }));
+  return myUri;
+};
+
+async function getTransactionDetails(signature: Uint8Array) {
+  try {
+    // Convert the Uint8Array signature to a Base58 string
+    const signatureBase58 = bs58.encode(signature);
+    // Fetch the transaction details
+    const transaction = await connection.getParsedTransaction(signatureBase58);
+
+    if (transaction) {
+      console.log("Transaction Details:", transaction);
+    } else {
+      console.log("Transaction not found or not finalized yet.");
+    }
+  } catch (error) {
+    console.error("Error fetching transaction details:", error);
+  }
+}
+
+export const getCandyMachine = async (
+  candyMachineAddress: string = "AUSJCkxXXqufH3nYZ8CY6MMdjRwqaqaQ42MaNHQQUAfa"
+) => {
+  const candyMachinePubkey = publicKey(candyMachineAddress);
+
+  const candyMachine = await fetchCandyMachine(umi, candyMachinePubkey);
+  console.log("candyMachine", candyMachine);
+
+  return candyMachine;
 };

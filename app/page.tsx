@@ -1,45 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
-import { transferNFT } from "../utils/transferNFT";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { createCoreNfts } from "@/utils/createCoreNfts";
-import {
-  GenericFile,
-  createGenericFileFromBrowserFile,
-} from "@metaplex-foundation/umi";
+
 import Image from "next/image";
-import { createcNFTs, fetchCollection } from "@/modules/core/utils/cNFTS";
+import { createcNFTs, fetchCollection } from "@/modules/core/utils";
 
 const Transfer = () => {
   const [recipientAddress, setRecipientAddress] = useState("");
-  const [transactionSignature, setTransactionSignature] = useState("");
-  const [error, setError] = useState("");
-  const [imgFile, setImgFile] = useState<null | GenericFile>(null);
   const [nfts, setNFTs] = useState<string[]>([]);
   const [metaData, setMetaData] = useState<any>(null);
-
-  const handleTransfer = async () => {
-    try {
-      console.log(
-        "process.env.NEXT_PUBLIC_RPC_URL",
-        process.env.NEXT_PUBLIC_RPC_URL
-      );
-
-      setError("");
-      const signature = await transferNFT(recipientAddress);
-      setTransactionSignature(signature);
-    } catch (err) {
-      setError("Failed to transfer NFT: " + (err as Error).message);
-    }
-  };
-
-  const handleImgInput = async (imgFile: File) => {
-    if (imgFile) {
-      const img = await createGenericFileFromBrowserFile(imgFile);
-      setImgFile(img);
-    }
-  };
 
   const handleMint = async () => {
     await createcNFTs(recipientAddress);
@@ -48,6 +18,7 @@ const Transfer = () => {
 
   useEffect(() => {
     async function getNFTs() {
+      // getCandyMachine();
       const nfts = await fetchCollection();
       setNFTs(nfts);
     }
@@ -58,7 +29,7 @@ const Transfer = () => {
       <div className="flex flex-col items-center gap-4">
         <h2 className="text-3xl font-bold">Collect Your NFT Pass</h2>
         <h2 className="text-3xl font-bold">{nfts.length}/1000</h2>
-        {true && (
+        {/* {true && (
           <>
             <div className="text-primary font-medium">
               0xDsaff221fdfcdsaf2e2fdds....
@@ -76,7 +47,7 @@ const Transfer = () => {
               </a>
             </div>
           </>
-        )}
+        )} */}
         <Input
           onChange={(e) => setRecipientAddress(e.target.value)}
           placeholder="Enter your Solana Address"
@@ -99,6 +70,39 @@ const Transfer = () => {
         >
           Claim NFT
         </Button>
+        {/* <div className="w-full h-1 my-8 bg-white" />
+        <Input
+          accept="image/png, image/jpeg"
+          multiple={false}
+          type="file"
+          onChange={(e) =>
+            e.target.files ? handleImgInput(e.target.files[0]) : null
+          }
+        />
+        <Button>upload to Ipfts</Button>
+
+        <Input
+          onChange={(e) => setCollectionName(e.target.value)}
+          placeholder="Enter Collection Name"
+          className="border border-primary  p-4 shadow-[0px_0px_80.2px_-5px_rgba(119,91,187,0.73)]"
+        />
+        <Input
+          accept="image/png, image/jpeg"
+          multiple={false}
+          type="file"
+          onChange={(e) =>
+            e.target.files ? setCollectionImg(e.target.files[0]) : null
+          }
+        />
+        <Button
+          onClick={() =>
+            collectionImg
+              ? createNewCollecton({ collectionName, collectionImg })
+              : {}
+          }
+        >
+          Create Collection
+        </Button> */}
       </div>
       <Image src="/nft.png" width={500} height={500} alt="test-nft" />
       {/* <div className="flex flex-col gap-4">
