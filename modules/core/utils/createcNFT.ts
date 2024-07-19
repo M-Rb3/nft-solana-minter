@@ -1,9 +1,8 @@
 import { publicKey } from "@metaplex-foundation/umi";
-import { generateMetaData } from "./cNFTS";
 import { mintToCollectionV1 } from "@metaplex-foundation/mpl-bubblegum";
 import { umi } from "./connection";
 import bs58 from "bs58";
-import digitalexplorer from "@/public/tickets/digitalexplorer.json";
+import digitalexplorer from "../data/tickets/digitalexplorer.json";
 import { fetchCollection } from "./collections";
 import { generateNFTName } from "./helpers";
 
@@ -42,10 +41,9 @@ export const createcNFTs = async (recipientAddress: string) => {
       ],
     },
   }).sendAndConfirm(umi);
-  console.log("sucess mint", signature);
+  console.log("mint sucess");
 
   const signatureBase58 = bs58.encode(signature);
 
-  console.log("signatureBase58", signatureBase58);
   return signatureBase58;
 };

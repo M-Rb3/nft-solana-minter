@@ -24,4 +24,4 @@ const keypair = umi.eddsa.createKeypairFromSecretKey(senderSecretKey);
 const signer = createSignerFromKeypair(umi, keypair);
 umi.use(signerIdentity(signer));
 
-export { umi, signer, keypair };
+export { umi, signer, keypair, connection };
