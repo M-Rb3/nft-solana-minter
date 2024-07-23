@@ -18,32 +18,33 @@ export const createcNFTs = async (recipientAddress: string) => {
     await fetchCollection(process.env.NEXT_PUBLIC_COLLECTION_ID!)
   ).length;
   let nftMetadata = digitalexplorer;
-  const name = generateNFTName(collectionLength, 1000, nftMetadata.name);
-  nftMetadata.name = name;
+  // const name = generateNFTName(collectionLength, 1000, nftMetadata.name);
+  nftMetadata.name = "Ultimate Experince";
   //   customer wallet adderss
   const recipientPubKey = publicKey(recipientAddress);
 
-  //   generate NFT metadata and upload it
+  // //   generate NFT metadata and upload it
   const uri = await umi.uploader.uploadJson(nftMetadata);
+  console.log("uri", uri);
 
-  const { signature } = await mintToCollectionV1(umi, {
-    leafOwner: recipientPubKey, // cNFT owner
-    merkleTree: merkleTreeDevnetAddress,
-    collectionMint: collectionDevnetMint,
-    metadata: {
-      name: nftMetadata.name,
-      symbol: nftMetadata.symbol,
-      uri: uri,
-      sellerFeeBasisPoints: nftMetadata.seller_fee_basis_points,
-      collection: { key: collectionDevnetMint, verified: true },
-      creators: [
-        { address: umi.identity.publicKey, verified: true, share: 100 },
-      ],
-    },
-  }).sendAndConfirm(umi);
-  console.log("mint sucess");
+  // const { signature } = await mintToCollectionV1(umi, {
+  //   leafOwner: recipientPubKey, // cNFT owner
+  //   merkleTree: merkleTreeDevnetAddress,
+  //   collectionMint: collectionDevnetMint,
+  //   metadata: {
+  //     name: nftMetadata.name,
+  //     symbol: nftMetadata.symbol,
+  //     uri: uri,
+  //     sellerFeeBasisPoints: nftMetadata.seller_fee_basis_points,
+  //     collection: { key: collectionDevnetMint, verified: true },
+  //     creators: [
+  //       { address: umi.identity.publicKey, verified: true, share: 100 },
+  //     ],
+  //   },
+  // }).sendAndConfirm(umi);
+  // console.log("mint sucess");
 
-  const signatureBase58 = bs58.encode(signature);
+  // const signatureBase58 = bs58.encode(signature);
 
-  return signatureBase58;
+  // return signatureBase58;
 };
