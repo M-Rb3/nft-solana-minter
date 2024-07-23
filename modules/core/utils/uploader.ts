@@ -7,12 +7,14 @@ interface UploadFileProps {
 
 export const uploadFile = async ({ img }: UploadFileProps) => {
   // Parse a generic file to and from a browser file.
-  const imgFile = await createGenericFileFromBrowserFile(img, {
+  console.log(img);
+
+  const file = await createGenericFileFromBrowserFile(img, {
     displayName: img.name,
-    contentType: "image/png",
+    contentType: img.type,
   });
 
-  const [myUri] = await umi.uploader.upload([imgFile]);
+  const [myUri] = await umi.uploader.upload([file]);
 
   return myUri;
 };

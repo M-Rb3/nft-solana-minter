@@ -14,16 +14,21 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "../components/ui/dropdown-menu";
+import { ticketsMetadata } from "@/modules/core/data/ticketsMetadata";
+import { TicketType } from "@/types";
+
+const ticketoptions = Object.keys(ticketsMetadata) as TicketType[];
 
 const Transfer = () => {
   const [recipientAddress, setRecipientAddress] = useState("");
   const [nfts, setNFTs] = useState<string[]>([]);
   const [trxHash, setTrxHash] = useState("");
-  const [position, setPosition] = useState("bottom");
+  const [ticketOption, setTicketOption] =
+    useState<TicketType>("Digital Explorer");
 
   const handleMint = async () => {
-    const trxHash = await createcNFTs(recipientAddress);
-    // setTrxHash(trxHash);
+    const trxHash = await createcNFTs(recipientAddress, ticketOption);
+    setTrxHash(trxHash);
   };
 
   useEffect(() => {
@@ -35,28 +40,29 @@ const Transfer = () => {
   }, [trxHash]);
   return (
     <div className="flex justify-around items-center min-h-screen home">
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-4 relative">
         <h2 className="text-3xl font-bold">Collect Your NFT Pass</h2>
         <h2 className="text-3xl font-bold">{nfts.length}/1000</h2>
         <DropdownMenu>
           <DropdownMenuTrigger className="w-full" asChild>
-            <Button variant="outline">Ticket option</Button>
+            <Button variant="outline">{ticketOption}</Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <DropdownMenuLabel>Panel Position</DropdownMenuLabel>
-            <DropdownMenuSeparator />
+          <DropdownMenuContent className="w-full">
             <DropdownMenuRadioGroup
-              value={position}
-              onValueChange={setPosition}
+              className="w-full"
+              value={ticketOption}
+              onValueChange={(value: string) =>
+                setTicketOption(value as TicketType)
+              }
             >
-              <DropdownMenuRadioItem value="top">Top</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="bottom">
-                Bottom
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="right">Right</DropdownMenuRadioItem>
+              {ticketoptions.map((ticket: TicketType) => (
+                <DropdownMenuRadioItem key={ticket} value={ticket}>
+                  {ticket}
+                </DropdownMenuRadioItem>
+              ))}
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
-        </DropdownMenu>{" "}
+        </DropdownMenu>
         {trxHash && (
           <a
             href={`https://explorer.solana.com/tx/${trxHash}?cluster=devnet`}

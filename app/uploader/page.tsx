@@ -19,7 +19,7 @@ const Page = () => {
   return (
     <div className="flex flex-col justify-center gap-4 items-center min-h-screen home">
       <Input
-        accept="image/png, image/jpeg"
+        accept="image/png, .json"
         multiple={false}
         className="w-fit"
         type="file"
